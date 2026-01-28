@@ -1,0 +1,305 @@
+<div id="miniBlog"></div>
+
+<script>
+(() => {
+  const POSTS_URL = "https://meshmintsupp.github.io/spotlights-data/posts.json"
+
+  const loadPosts = async () => {
+  const res = await fetch(POSTS_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("Could not load posts.json");
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+};
+
+  const root = document.getElementById("miniBlog");
+  if (!root) return;
+
+  const css = `
+    .mb-wrap{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.35;
+
+      --mb-text: rgba(0,0,0,.88);
+      --mb-muted: rgba(0,0,0,.62);
+      --mb-border: rgba(0,0,0,.12);
+      --mb-surface: #fff;
+
+      --mb-accent: #0f172a;
+      --mb-accent-text: #ffffff;
+
+      --mb-chip-bg: #CCA1D9;
+      --mb-chip-border: rgba(0,0,0,.18);
+      --mb-chip-hover: #e9ecef;
+
+      --mb-link-bg: #ffffff;
+      --mb-link-text: #129C85;
+      --mb-link-border: rgba(0,0,0,.18);
+      --mb-link-hover-border: rgba(0,0,0,.35);
+
+      --mb-focus: rgba(59,130,246,.35);
+    }
+
+    .mb-card{border:1px solid var(--mb-border); border-radius:12px; padding:14px; margin:10px 0; background:var(--mb-surface)}
+    .mb-top{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:10px}
+    .mb-controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+    .mb-input, .mb-select{
+      padding:10px 12px;
+      border:1px solid rgba(0,0,0,.18);
+      border-radius:10px;
+      background:#fff;
+      color:var(--mb-text);
+      outline:none;
+    }
+    .mb-input{min-width:220px}
+    .mb-input:focus, .mb-select:focus, .mb-chip:focus, .mb-link:focus{
+      box-shadow: 0 0 0 4px var(--mb-focus);
+    }
+
+    .mb-chips{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+
+    .mb-chip{
+      border:1px solid var(--mb-chip-border);
+      background:var(--mb-chip-bg);
+      color:#ffffff;
+      border-radius:999px;
+      padding:6px 10px;
+      cursor:pointer;
+      user-select:none;
+      outline:none;
+      transition: background .12s ease, border-color .12s ease, transform .06s ease;
+    }
+    .mb-chip:hover{background:var(--mb-chip-hover)}
+    .mb-chip:active{transform: translateY(1px)}
+    .mb-chip[aria-pressed="true"]{background:#129C85; color:#ffffff; border-color:#129C85}
+
+    .mb-title{font-size:18px; font-weight:650; margin:0; color:var(--mb-text)}
+    .mb-meta{display:flex; gap:10px; flex-wrap:wrap; color:var(--mb-muted); font-size:13px; margin:6px 0 8px}
+    .mb-tags{display:flex; gap:6px; flex-wrap:wrap}
+    .mb-tag{font-size:12px; padding:3px 8px; border-radius:999px; background:#CCA1D9; color:#ffffff}
+
+    .mb-content{
+      color:var(--mb-text);
+      margin:0 0 10px;
+    }
+    .mb-content p{margin:0 0 10px}
+    .mb-content ul{margin:0 0 10px 18px; padding:0}
+    .mb-content li{margin:6px 0}
+
+    .mb-links{display:flex; gap:10px; flex-wrap:wrap}
+
+    .mb-link{
+      display:inline-block;
+      text-decoration:none;
+      border:1px solid var(--mb-link-border);
+      padding:8px 10px;
+      border-radius:10px;
+      background: var(--mb-link-bg);
+      color: var(--mb-link-text);
+      outline:none;
+    }
+    .mb-link:hover{border-color:var(--mb-link-hover-border)}
+
+    .mb-empty{padding:16px; border:1px dashed rgba(0,0,0,.25); border-radius:12px; color:var(--mb-muted)}
+    .mb-footer{margin-top:10px; color:var(--mb-muted); font-size:12px}
+  `;
+
+  root.innerHTML = `
+    <style>${css}</style>
+    <div class="mb-wrap">
+      <div class="mb-top">
+        <div class="mb-controls">
+          <input class="mb-input" type="search" placeholder="Suche…" aria-label="Suche" />
+          <select class="mb-select" aria-label="Sortierung">
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+            <option value="title">Titel (A–Z)</option>
+          </select>
+        </div>
+        <div class="mb-footer" data-el="count"></div>
+      </div>
+
+      <div class="mb-chips" data-el="chips"></div>
+      <div data-el="list"></div>
+    </div>
+  `;
+
+  const els = {
+    search: root.querySelector(".mb-input"),
+    sort: root.querySelector(".mb-select"),
+    chips: root.querySelector('[data-el="chips"]'),
+    list: root.querySelector('[data-el="list"]'),
+    count: root.querySelector('[data-el="count"]'),
+  };
+
+  const state = {
+    posts: [],
+    allTags: [],
+    activeTag: null,
+    q: "",
+    sort: "newest"
+  };
+
+  const parseDate = (s) => {
+    const parts = String(s || "").split(".");
+    const d = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const y = parseInt(parts[2], 10);
+    if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) return 0;
+    return new Date(y, (m || 1) - 1, d || 1).getTime();
+  };
+
+  const uniq = (arr) => Array.from(new Set(arr)).sort((a,b) => a.localeCompare(b, "de"));
+
+  const renderChips = () => {
+    const chips = ["Alle", ...state.allTags];
+    els.chips.innerHTML = chips.map(tag => {
+      const isAll = tag === "Alle";
+      const pressed = isAll ? state.activeTag === null : state.activeTag === tag;
+      return `<button type="button" class="mb-chip" data-tag="${escapeAttr(tag)}" aria-pressed="${pressed}">${escapeHtml(tag)}</button>`;
+    }).join("");
+  };
+
+  const sortPosts = (posts) => {
+    const copy = posts.slice();
+    if (state.sort === "title") {
+      copy.sort((a,b) => (a.title||"").localeCompare(b.title||"", "de"));
+    } else if (state.sort === "oldest") {
+      copy.sort((a,b) => parseDate(a.date) - parseDate(b.date));
+    } else {
+      copy.sort((a,b) => parseDate(b.date) - parseDate(a.date));
+    }
+    return copy;
+  };
+
+  const stripHtml = (html) => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = String(html || "");
+    return (tmp.textContent || tmp.innerText || "").trim();
+  };
+
+  const matches = (post) => {
+    const q = state.q.trim().toLowerCase();
+    const searchable = [
+      post.title,
+      stripHtml(post.contentHtml),
+      (post.tags || []).join(" ")
+    ].join(" ").toLowerCase();
+    const inText = !q || searchable.includes(q);
+    const inTag = state.activeTag === null || (post.tags||[]).includes(state.activeTag);
+    return inText && inTag;
+  };
+
+  const renderList = () => {
+    const filtered = sortPosts(state.posts.filter(matches));
+    els.count.textContent = `${filtered.length} Beitrag/Beiträge`;
+    if (!filtered.length) {
+      els.list.innerHTML = `<div class="mb-empty">Keine Treffer. Versuche eine andere Suche oder wähle „Alle“.</div>`;
+      return;
+    }
+    els.list.innerHTML = filtered.map(p => `
+      <article class="mb-card">
+        <h3 class="mb-title">${escapeHtml(p.title || "")}</h3>
+        <div class="mb-meta">
+          <span>📅 ${escapeHtml(p.date || "")}</span>
+          ${p.tags?.length ? `<span class="mb-tags">${p.tags.map(t => `<span class="mb-tag">${escapeHtml(t)}</span>`).join("")}</span>` : ""}
+        </div>
+        ${p.contentHtml ? `<div class="mb-content">${sanitizeContentHtml(p.contentHtml)}</div>` : ""}
+        ${(p.url || p.sourceUrl) ? `
+          <div class="mb-links">
+            ${p.url ? `<a class="mb-link" href="${escapeAttr(p.url)}" target="_blank" rel="noopener">Link zum Download des Spotlights</a>` : ""}
+            ${p.sourceUrl ? `<a class="mb-link" href="${escapeAttr(p.sourceUrl)}" target="_blank" rel="noopener">Link zur Quelle</a>` : ""}
+          </div>
+        ` : ""}
+      </article>
+    `).join("");
+  };
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+  function escapeAttr(str){
+    return escapeHtml(str).replaceAll("`","&#096;");
+  }
+
+  function sanitizeContentHtml(html){
+    const allowed = new Set(["P","UL","OL","LI","B","STRONG","I","EM","BR","A"]);
+    const tmp = document.createElement("div");
+    tmp.innerHTML = String(html || "");
+
+    const walk = (node) => {
+      const children = Array.from(node.childNodes);
+      for (const child of children) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const tag = child.tagName.toUpperCase();
+          if (!allowed.has(tag)) {
+            const text = document.createTextNode(child.textContent || "");
+            child.replaceWith(text);
+            continue;
+          }
+
+          for (const attr of Array.from(child.attributes)) {
+            const name = attr.name.toLowerCase();
+            if (tag === "A" && (name === "href" || name === "target" || name === "rel")) {
+              continue;
+            }
+            child.removeAttribute(attr.name);
+          }
+
+          if (tag === "A") {
+            const href = child.getAttribute("href") || "";
+            const safe = href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:");
+            if (!safe) {
+              child.replaceWith(document.createTextNode(child.textContent || ""));
+              continue;
+            }
+            child.setAttribute("target", "_blank");
+            child.setAttribute("rel", "noopener");
+          }
+
+          walk(child);
+        } else if (child.nodeType === Node.COMMENT_NODE) {
+          child.remove();
+        }
+      }
+    };
+
+    walk(tmp);
+    return tmp.innerHTML;
+  }
+
+  const bindEvents = () => {
+    els.search.addEventListener("input", () => {
+      state.q = els.search.value;
+      renderList();
+    });
+    els.sort.addEventListener("change", () => {
+      state.sort = els.sort.value;
+      renderList();
+    });
+    els.chips.addEventListener("click", (e) => {
+      const target = e.target && e.target.closest ? e.target : null;
+      const btn = target ? target.closest("button[data-tag]") : null;
+      if (!btn) return;
+      const tag = btn.getAttribute("data-tag");
+      state.activeTag = (tag === "Alle") ? null : tag;
+      renderChips();
+      renderList();
+    });
+  };
+
+  (async () => {
+    const posts = await loadPosts();
+    state.posts = Array.isArray(posts) ? posts : [];
+    state.allTags = uniq(state.posts.flatMap(p => p.tags || []));
+    bindEvents();
+    renderChips();
+    renderList();
+  })();
+})();
+</script>
