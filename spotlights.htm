@@ -199,7 +199,7 @@
     }
     els.list.innerHTML = filtered.map(p => `
       <article class="mb-card">
-        <h3 class="mb-title">${escapeHtml(p.title || "")}</h3>
+        <h3 class="mb-title">${escapeHtml(p.title || "").replaceAll("\n","<br>")}</h3>
         <div class="mb-meta">
           <span>📅 ${escapeHtml(p.date || "")}</span>
           ${p.tags?.length ? `<span class="mb-tags">${p.tags.map(t => `<span class="mb-tag">${escapeHtml(t)}</span>`).join("")}</span>` : ""}
