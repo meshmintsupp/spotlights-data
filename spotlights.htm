@@ -2,14 +2,14 @@
 
 <script>
 (() => {
-  const POSTS_URL = "https://meshmintsupp.github.io/spotlights-data/posts.json"
+  const POSTS_URL = "https://meshmintsupp.github.io/spotlights-data/posts.json";
 
   const loadPosts = async () => {
-  const res = await fetch(POSTS_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("Could not load posts.json");
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-};
+    const res = await fetch(POSTS_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error("Could not load posts.json");
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  };
 
   const root = document.getElementById("miniBlog");
   if (!root) return;
@@ -132,13 +132,15 @@
     count: root.querySelector('[data-el="count"]'),
   };
 
-  const state = {
-    posts: [],
-    allTags: [],
-    activeTag: null,
-    q: "",
-    sort: "newest"
-  };
+  // Tags, die immer ans Ende sollen – in genau dieser Reihenfolge:
+  const PINNED_TAGS = [
+    "Kindergarten",
+    "Primarstufe",
+    "Sekundarstufe I",
+    "Sekundarstufe II",
+    "Studium",
+  ];
+  const pinnedIndex = (tag) => PINNED_TAGS.indexOf(tag);
 
   const parseDate = (s) => {
     const parts = String(s || "").split(".");
@@ -149,25 +151,41 @@
     return new Date(y, (m || 1) - 1, d || 1).getTime();
   };
 
-  const uniq = (arr) => Array.from(new Set(arr)).sort((a,b) => a.localeCompare(b, "de"));
+  const uniq = (arr) => Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b, "de"));
 
-  const renderChips = () => {
-    const chips = ["Alle", ...state.allTags];
-    els.chips.innerHTML = chips.map(tag => {
-      const isAll = tag === "Alle";
-      const pressed = isAll ? state.activeTag === null : state.activeTag === tag;
-      return `<button type="button" class="mb-chip" data-tag="${escapeAttr(tag)}" aria-pressed="${pressed}">${escapeHtml(tag)}</button>`;
-    }).join("");
+  // Sortierung: erst "normal" alphabetisch (de), dann PINNED_TAGS in fixer Reihenfolge
+  const sortTagsSmart = (tags) => {
+    const arr = Array.isArray(tags) ? tags.slice() : [];
+    arr.sort((a, b) => {
+      const ia = pinnedIndex(a);
+      const ib = pinnedIndex(b);
+
+      const aPinned = ia !== -1;
+      const bPinned = ib !== -1;
+
+      if (!aPinned && !bPinned) return String(a).localeCompare(String(b), "de");
+      if (aPinned && bPinned) return ia - ib; // feste Reihenfolge
+      return aPinned ? 1 : -1; // pinned immer nach hinten
+    });
+    return arr;
+  };
+
+  const state = {
+    posts: [],
+    allTags: [],
+    activeTags: new Set(), // Multi-Select
+    q: "",
+    sort: "newest",
   };
 
   const sortPosts = (posts) => {
     const copy = posts.slice();
     if (state.sort === "title") {
-      copy.sort((a,b) => (a.title||"").localeCompare(b.title||"", "de"));
+      copy.sort((a, b) => (a.title || "").localeCompare(b.title || "", "de"));
     } else if (state.sort === "oldest") {
-      copy.sort((a,b) => parseDate(a.date) - parseDate(b.date));
+      copy.sort((a, b) => parseDate(a.date) - parseDate(b.date));
     } else {
-      copy.sort((a,b) => parseDate(b.date) - parseDate(a.date));
+      copy.sort((a, b) => parseDate(b.date) - parseDate(a.date));
     }
     return copy;
   };
@@ -180,14 +198,29 @@
 
   const matches = (post) => {
     const q = state.q.trim().toLowerCase();
-    const searchable = [
-      post.title,
-      stripHtml(post.contentHtml),
-      (post.tags || []).join(" ")
-    ].join(" ").toLowerCase();
+    const searchable = [post.title, stripHtml(post.contentHtml), (post.tags || []).join(" ")]
+      .join(" ")
+      .toLowerCase();
+
     const inText = !q || searchable.includes(q);
-    const inTag = state.activeTag === null || (post.tags||[]).includes(state.activeTag);
+
+    // Multi-Tag: wenn keine Tags aktiv -> true,
+    // sonst: Post muss mindestens einen aktiven Tag enthalten
+    const postTags = post.tags || [];
+    const inTag = state.activeTags.size === 0 ? true : postTags.some((t) => state.activeTags.has(t));
+
     return inText && inTag;
+  };
+
+  const renderChips = () => {
+    const chips = ["Alle", ...state.allTags];
+    els.chips.innerHTML = chips
+      .map((tag) => {
+        const isAll = tag === "Alle";
+        const pressed = isAll ? state.activeTags.size === 0 : state.activeTags.has(tag);
+        return `<button type="button" class="mb-chip" data-tag="${escapeAttr(tag)}" aria-pressed="${pressed}">${escapeHtml(tag)}</button>`;
+      })
+      .join("");
   };
 
   const renderList = () => {
@@ -197,38 +230,65 @@
       els.list.innerHTML = `<div class="mb-empty">Keine Treffer. Versuche eine andere Suche oder wähle „Alle“.</div>`;
       return;
     }
-    els.list.innerHTML = filtered.map(p => `
+
+    els.list.innerHTML = filtered
+      .map(
+        (p) => `
       <article class="mb-card">
-        <h3 class="mb-title">${escapeHtml(p.title || "").replaceAll("\n","<br>")}</h3>
+        <h3 class="mb-title">${escapeHtml(p.title || "").replaceAll("\n", "<br>")}</h3>
         <div class="mb-meta">
           <span>📅 ${escapeHtml(p.date || "")}</span>
-          ${p.tags?.length ? `<span class="mb-tags">${p.tags.map(t => `<span class="mb-tag">${escapeHtml(t)}</span>`).join("")}</span>` : ""}
+          ${
+            p.tags?.length
+              ? `<span class="mb-tags">${sortTagsSmart(p.tags)
+                  .map((t) => `<span class="mb-tag">${escapeHtml(t)}</span>`)
+                  .join("")}</span>`
+              : ""
+          }
         </div>
         ${p.contentHtml ? `<div class="mb-content">${sanitizeContentHtml(p.contentHtml)}</div>` : ""}
-        ${(p.url || p.sourceUrl) ? `
+        ${
+          p.url || p.sourceUrl
+            ? `
           <div class="mb-links">
-            ${p.url ? `<a class="mb-link" href="${escapeAttr(p.url)}" target="_blank" rel="noopener">Link zum Download des Spotlights</a>` : ""}
-            ${p.sourceUrl ? `<a class="mb-link" href="${escapeAttr(p.sourceUrl)}" target="_blank" rel="noopener">Link zur Quelle</a>` : ""}
+            ${
+              p.url
+                ? `<a class="mb-link" href="${escapeAttr(
+                    p.url
+                  )}" target="_blank" rel="noopener">Link zum Download des Spotlights</a>`
+                : ""
+            }
+            ${
+              p.sourceUrl
+                ? `<a class="mb-link" href="${escapeAttr(
+                    p.sourceUrl
+                  )}" target="_blank" rel="noopener">Link zur Quelle</a>`
+                : ""
+            }
           </div>
-        ` : ""}
+        `
+            : ""
+        }
       </article>
-    `).join("");
+    `
+      )
+      .join("");
   };
 
-  function escapeHtml(str){
+  function escapeHtml(str) {
     return String(str)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
-  function escapeAttr(str){
-    return escapeHtml(str).replaceAll("`","&#096;");
+  function escapeAttr(str) {
+    return escapeHtml(str).replaceAll("`", "&#096;");
   }
 
-  function sanitizeContentHtml(html){
-    const allowed = new Set(["P","UL","OL","LI","B","STRONG","I","EM","BR","A"]);
+  function sanitizeContentHtml(html) {
+    const allowed = new Set(["P", "UL", "OL", "LI", "B", "STRONG", "I", "EM", "BR", "A"]);
     const tmp = document.createElement("div");
     tmp.innerHTML = String(html || "");
 
@@ -253,7 +313,8 @@
 
           if (tag === "A") {
             const href = child.getAttribute("href") || "";
-            const safe = href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:");
+            const safe =
+              href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:");
             if (!safe) {
               child.replaceWith(document.createTextNode(child.textContent || ""));
               continue;
@@ -278,16 +339,27 @@
       state.q = els.search.value;
       renderList();
     });
+
     els.sort.addEventListener("change", () => {
       state.sort = els.sort.value;
       renderList();
     });
+
+    // Multi-Select: Chip toggeln, "Alle" leert Auswahl
     els.chips.addEventListener("click", (e) => {
       const target = e.target && e.target.closest ? e.target : null;
       const btn = target ? target.closest("button[data-tag]") : null;
       if (!btn) return;
+
       const tag = btn.getAttribute("data-tag");
-      state.activeTag = (tag === "Alle") ? null : tag;
+
+      if (tag === "Alle") {
+        state.activeTags.clear();
+      } else {
+        if (state.activeTags.has(tag)) state.activeTags.delete(tag);
+        else state.activeTags.add(tag);
+      }
+
       renderChips();
       renderList();
     });
@@ -296,10 +368,14 @@
   (async () => {
     const posts = await loadPosts();
     state.posts = Array.isArray(posts) ? posts : [];
-    state.allTags = uniq(state.posts.flatMap(p => p.tags || []));
+
+    // erst uniq (alphabetisch), dann "pinned" ans Ende in fixer Reihenfolge
+    state.allTags = sortTagsSmart(uniq(state.posts.flatMap((p) => p.tags || [])));
+
     bindEvents();
     renderChips();
     renderList();
   })();
 })();
 </script>
+
