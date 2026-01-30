@@ -205,9 +205,9 @@
     const inText = !q || searchable.includes(q);
 
     // Multi-Tag: wenn keine Tags aktiv -> true,
-    // sonst: Post muss mindestens einen aktiven Tag enthalten
+    // sonst: Post muss alle aktiven Tags enthalten
     const postTags = post.tags || [];
-    const inTag = state.activeTags.size === 0 ? true : postTags.some((t) => state.activeTags.has(t));
+    const inTag = state.activeTags.size === 0 ? true : Array.from(state.activeTags).every(t => postTags.includes(t));
 
     return inText && inTag;
   };
