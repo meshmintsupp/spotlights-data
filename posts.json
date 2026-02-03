@@ -16,5 +16,23 @@
     "contentHtml": "<p>Die für viele sicherlich überraschende Lösung ist A.</p><p>In der Studie von Rubineau et al. (2024) wurden längsschnittlich multiplexe Netzwerkdaten über die Studienwahl und das Durchhaltevermögen von 1260 Studenten an 14 Universitäten untersucht. Peers mit denen Studierende nach eigenen Angaben lediglich Zeit verbringen (und nicht z.B. eng befreundete Peers) beeinflussten die Wahl des Studienfachs substantiell und nachhaltig.</p>",
     "url": "https://drive.google.com/file/d/1sbGyjy66rm4X3BkDGVfTVA4QQFPj3zAP/view?usp=share_link",
     "sourceUrl": "https://doi.org/10.1093/sf/soad129"
+  },
+  {
+    "id": "p003",
+    "title": "Überdurchschnittliche Leistungen und dennoch unterbewertet: Frauen in MINT-Studiengängen",
+    "date": "30.01.2026",
+    "tags": ["Gender", "Leistung", "Stereotyp", "Studium"],
+    "contentHtml": "<p>In der Forschungsstudie von Brittany Bloodhart und Kolleginnen erzielten Frauen sowohl in mathematikaffinen als auch in den übrigen MINT-Fächern bessere Noten als männliche Studierende. Die Wahrscheinlichkeit, dass eine Frau ihr Studium mit der Bestnote abschloss, war 1,5-mal so hoch wie bei den Männern. Dennoch galten sie an ihren Hochschulen weiterhin als weniger begabt als Männer. Sie unterschätzten sich zudem selbst.</p><p>Dies ist ein ernüchterndes Ergebnis: Selbst wenn Frauen objektiv bessere Leistungen erbringen, gelingt es ihnen nicht, sich von den negativen Stereotypen über ihre Leistungen in den MINT-Fächern zu befreien.</p>",
+    "url": "https://drive.google.com/file/d/1EsKrWVqWAUIX0ZtFVKgkN-xeObCCx1ft/view?usp=sharing",
+    "sourceUrl": "https://doi.org/10.1371/journal.pone.0234685"
+  },
+  {
+    "id": "p004",
+    "title": "Welche Emotionen sind aus Kindersicht charakteristisch für Forschende?\n(A) Positive? \n(B) Negative? \n(C) Neutrale?",
+    "date": "30.01.2026",
+    "tags": ["Emotionen", "Forschung", "Primarstufe", "Sekundarstufe I"],
+    "contentHtml": "<p>Lösung: (A)</p><p>Vasilia Christidou und ihre Kolleginnen untersuchten 245 Jungen und Mädchen im Alter von 5, 8 und 11 Jahren. Das eindeutige Ergebnis dieser Studie war, dass die Forscherinnen und Forscher von den Kindern in dieser Altersgruppe mit großer Mehrheit als positiv emotional eingestuft wurden.</p>",
+    "url": "https://drive.google.com/file/d/15fDyIDy8q7FWzwZu1_o3DdqoEPGdYwy0/view?usp=sharing",
+    "sourceUrl": "https://doi.org/10.1080/02635143.2021.1998770"
   }
 ]
