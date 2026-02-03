@@ -113,7 +113,6 @@
           <select class="mb-select" aria-label="Sortierung">
             <option value="newest">Neueste zuerst</option>
             <option value="oldest">Älteste zuerst</option>
-            <option value="title">Titel (A–Z)</option>
           </select>
         </div>
         <div class="mb-footer" data-el="count"></div>
@@ -180,9 +179,7 @@
 
   const sortPosts = (posts) => {
     const copy = posts.slice();
-    if (state.sort === "title") {
-      copy.sort((a, b) => (a.title || "").localeCompare(b.title || "", "de"));
-    } else if (state.sort === "oldest") {
+    if (state.sort === "oldest") {
       copy.sort((a, b) => parseDate(a.date) - parseDate(b.date));
     } else {
       copy.sort((a, b) => parseDate(b.date) - parseDate(a.date));
