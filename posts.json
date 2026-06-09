@@ -304,5 +304,23 @@
   "contentHtml": "<p>Rätselhafter Befund aus den USA zum PECS Gender Gap (Physics, Engineering, Computer Science)</p><p>Die Lage:</p><p>In den USA erwerben in den PECS-Fächern deutlich mehr Männer als Frauen einen Universitätsabschluss. Das Verhältnis ist etwa 4:1.</p><p>Ein rätselhafter Befund:</p><p>Joseph Cimpian und Jo. King analyierten in ihrem in Science erschienenen Paper Daten von mehr als 34 Millionen Bachelorabschlüssen. Je strenger die mathematischen Eingangsvoraussetzungen einer Universität waren, desto ausgeglichener war das Geschlechterverhältnis bei den Abschlüssen. Tatsächlich war es nahezu ausgeglichen bei sehr strengen Universitäten. Doch an Universitäten mit niedrigen Eingangsvoraussetzungen in der Mathematik schafften etwa SIEBEN MAL SO VIELE MÄNNER einen Abschluss als Frauen.</p><p>Haben Sie eine Erklärung parat?</p>",
   "url": "https://drive.google.com/file/d/16LWDsqtqEoylsjRIwb_QT8Ocex6uLUHk/view?usp=sharing",
   "sourceUrl": "https://doi.org/10.1126/science.adr0787"
+  },
+  {
+  "id": "p034",
+  "title": "\"Ich bin ein typisches Mädchen!\"\n\"Ich bin ein typischer Junge!\"\nWelchen Effekt haben solche Selbst-Stereotypen?",
+  "date": "09.06.2026",
+  "tags": ["Gender", "Stereotyp", "Leistung", "Sekundarstufe I"],
+  "contentHtml": "<p>Ethnografische und soziologische Studien haben wiederholt gezeigt, dass der Ruf eines fleißigen, gewissenhaften Schülers die Akzeptanz unter Gleichaltrigen bei Jungen untergraben kann. Auch die Ergebnisse der Studie von Leikas und Kolleg/innen deuten darauf hin, dass ein typisch männliches Werteprofil für schulische Leistungen problematisch ist, während ein „mädchentypisches“ Profil Schüler/innen insgesamt einen kleinen Bildungsvorteil verschaffen kann.</p>",
+  "url": "https://drive.google.com/file/d/1C34KgfJ3ZgNjeoW_UwnhO2ohAFNPEPj_/view?usp=sharing",
+  "sourceUrl": "https://doi.org/10.1525/collabra.118840"
+  },
+  {
+  "id": "p035",
+  "title": "Gut gemeint ist leider noch lange nicht gut gemacht: MINT-Förderprogramm bleibt ohne Wirkung",
+  "date": "09.06.2026",
+  "tags": ["Mentoring", "Identität", "Studium"],
+  "contentHtml": "<p>Das ist leider nicht untypisch, was in der mit so viel Vorschlusslorbeeren in den USA gestarteten „BUILD initiative“ geschah. Nachdem man die Effekte der an den Universitäten etablierten Mentoring-Programme herausrechnete, konnten keine Fördereffekte mehr nachgewiesen werden.</p><p>Natürlich muss man einiges ausprobieren. Doch gut gemeint ist eben noch lange nicht gut gemacht. Wenigstens wurde dieses Programm seriös evaluiert und nicht nur eine Zufriedenheitsabfrage durchgeführt.</p><p>Kurzbeschreibung der „Build initiative“:</p><p>„At its core, the BUILD initiative captures students’ attention and imagination by exposing them to hands-on research experiences. The BUILD program aims to achieve its vision by enabling students to develop a strong science identity; namely, to begin seeing themselves as scientists by providing opportunities for them to think and act like scientists. Students selected into the program are designated as BUILD Scholars and awarded funding.”</p>",
+  "url": "https://drive.google.com/file/d/121_XhTUHlO32CS18Cockf4jwsRsbEeqH/view?usp=sharing",
+  "sourceUrl": "https://doi.org/10.1007/s11162-023-09745-8"
   }
 ]
